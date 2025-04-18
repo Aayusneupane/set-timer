@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>3D Neon Study Timer</title>
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(120deg, #1a0033, #330033, #1a0033);
+      background-size: 400% 400%;
+      animation: gradientShift 20s ease infinite;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      perspective: 1000px;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      transform-style: preserve-3d;
+      transition: transform 0.3s;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border-radius: 25px;
+      padding: 40px 30px;
+      box-shadow: 0 0 50px rgba(255, 0, 127, 0.4),
+                  0 0 100px rgba(0, 255, 231, 0.3);
+      text-align: center;
+      max-width: 450px;
+      width: 95%;
+      position: relative;
+      overflow: hidden;
+      transform: translateZ(50px);
+    }
+
+    .glass::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(#ff007f, #00ffe7, #ff007f);
+      animation: rotate 15s linear infinite;
+      z-index: -1;
+    }
+
+    @keyframes rotate {
+      100% { transform: rotate(360deg); }
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-bottom: 25px;
+      background: linear-gradient(45deg, #ff007f, #00ffe7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
+    }
+
+    .timer-container {
+      position: relative;
+      margin: 30px 0;
+    }
+
+    .progress-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 240px;
+      height: 240px;
+    }
+
+    .timer {
+      font-size: 3.8rem;
+      letter-spacing: 4px;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 0 20px #00ffe7;
+    }
+
+    input[type="number"] {
+      padding: 15px;
+      border-radius: 15px;
+      border: 2px solid #00ffe7;
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      font-size: 18px;
+      margin: 15px 0;
+      width: 100%;
+      transition: 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      box-shadow: 0 0 15px #00ffe7;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    button {
+      background: linear-gradient(45deg, #00ffe7, #ff007f);
+      border: none;
+      padding: 14px;
+      border-radius: 15px;
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+      backdrop-filter: blur(5px);
+      font-size: 16px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 255, 231, 0.5);
+    }
+
+    .quote {
+      margin: 25px 0;
+      font-size: 1.15rem;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.9;
+      transition: 0.5s;
+    }
+
+    .music-control {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 0 10px #ff007f;
+      font-size: 20px;
+    }
+
+    @media (max-width: 480px) {
+      .glass {
+        padding: 30px 20px;
+      }
+      
+      h1 {
+        font-size: 2.2rem;
+      }
+      
+      .timer {
+        font-size: 2.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="glass">
+      <h1>🚀 Focus Timer</h1>
+      <input type="number" id="minutesInput" placeholder="Minutes" min="1" />
+      <div class="timer-container">
+        <svg class="progress-ring" height="240" width="240">
+          <circle class="progress-ring__circle" stroke="#00ffe755" stroke-width="4" fill="transparent" r="110" cx="120" cy="120"/>
+        </svg>
+        <div class="timer" id="timerDisplay">00:00</div>
+      </div>
+      <div class="controls">
+        <button onclick="timer.start()">▶ Start</button>
+        <button onclick="timer.pause()">⏸ Pause</button>
+        <button onclick="timer.reset()">⏹ Reset</button>
+      </div>
+      <div class="quote" id="quote"></div>
+    </div>
+  </div>
+
+  <div class="music-control" onclick="toggleMusic()">🎵</div>
+
+  <audio id="bgMusic" loop>
+    <source src="https://assets.mixkit.co/music/preview/mixkit-inspiring-ambition-82.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const music = document.getElementById("bgMusic");
+    const quotes = [
+      "The only limit to our realization of tomorrow will be our doubts of today.",
+      "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+      "Don't watch the clock; do what it does. Keep going.",
+      "The secret of getting ahead is getting started.",
+      "Your time is limited, don't waste it living someone else's life.",
+      "Push yourself, because no one else is going to do it for you.",
+      "Be stronger than your excuses.",
+      "Dream it. Wish it. Do it.",
+      "Stay focused and never give up.",
+      "Discipline is doing it even when you don’t feel like it."
+    ];
+
+    class StudyTimer {
+      constructor() {
+        this.display = document.getElementById("timerDisplay");
+        this.input = document.getElementById("minutesInput");
+        this.quote = document.getElementById("quote");
+        this.time = 0;
+        this.interval = null;
+        this.progressRing = document.querySelector('.progress-ring__circle');
+        this.radius = this.progressRing.r.baseVal.value;
+        this.progressRing.style.strokeDasharray = `${2 * Math.PI * this.radius}`;
+      }
+
+      start() {
+        if (this.interval) return;
+        const minutes = parseInt(this.input.value) || 25;
+        this.time = minutes * 60;
+
+        this.interval = setInterval(() => {
+          this.time--;
+          this.updateDisplay();
+          this.updateProgress();
+
+          if (this.time <= 0) {
+            this.stop();
+            new Notification("Time's up! 🎉");
+          }
+        }, 1000);
+
+        this.showRandomQuote();
+        this.fadeInQuote();
+        music.play().catch(() => {});
+      }
+
+      updateProgress() {
+        const progress = 1 - (this.time / (parseInt(this.input.value) * 60));
+        const dashoffset = 2 * Math.PI * this.radius * progress;
+        this.progressRing.style.strokeDashoffset = dashoffset;
+      }
+
+      showRandomQuote() {
+        this.quote.textContent = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
+      }
+
+      fadeInQuote() {
+        this.quote.style.opacity = 0;
+        setTimeout(() => {
+          this.quote.style.opacity = 0.9;
+        }, 200);
+      }
+
+      pause() {
+        clearInterval(this.interval);
+        this.interval = null;
+        music.pause();
+      }
+
+      reset() {
+        this.pause();
+        this.time = 0;
+        this.updateDisplay();
+        this.progressRing.style.strokeDashoffset = 0;
+        this.quote.style.opacity = 0;
+      }
+
+      updateDisplay() {
+        const mins = Math.floor(this.time / 60).toString().padStart(2, '0');
+        const secs = (this.time % 60).toString().padStart(2, '0');
+        this.display.textContent = `${mins}:${secs}`;
+      }
+    }
+
+    const timer = new StudyTimer();
+
+    document.addEventListener('mousemove', (e) => {
+      const container = document.querySelector('.container');
+      const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+      const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+      container.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+    });
+
+    function toggleMusic() {
+      music.paused ? music.play() : music.pause();
+    }
+
+    if (Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+
+    document.addEventListener('click', () => {
+      if (typeof AudioContext !== "undefined") {
+        const context = new AudioContext();
+        context.resume();
+      }
+    }, {once: true});
+  </script>
+</body>
+</html>
